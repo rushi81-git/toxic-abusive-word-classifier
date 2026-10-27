@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SafeChat NLP: Real-Time Toxic Message Moderation, Context-Aware POS De-escalation & Low-Latency Inspector">
+  <title>SafeChat NLP — Real-Time De-escalation & NLP Inspector</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+  
+  <!-- Socket.IO Client -->
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="header-container">
+      
+      <div class="brand-wrapper">
+        <div class="brand-icon">🛡️</div>
+        <div class="brand-text">
+          <h1>SafeChat NLP <span class="brand-badge">Sub-25ms Engine</span></h1>
+          <div class="status-pill">
+            <span class="status-dot" id="status-dot"></span>
+            <span id="status-text">Connecting to RAM...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs" aria-label="Main Navigation">
+        <button class="nav-tab active" data-tab="chat">💬 Live Chat</button>
+        <button class="nav-tab" data-tab="sandbox">🔬 NLP Test Bench</button>
+        <button class="nav-tab" data-tab="syllabus">📚 Syllabus Proofs</button>
+        <button class="nav-tab" data-tab="deploy">🚀 Deploy & API</button>
+      </nav>
+
+      <!-- Active Tier Switcher -->
+      <div class="tier-switcher" id="tier-toggle" onclick="toggleTier()" title="Click to toggle between Premium AI De-escalation and Free BEEP Masking">
+        <span class="tier-icon" id="tier-icon">⚡</span>
+        <span class="tier-label" id="tier-label">PREMIUM: AI DE-ESCALATE</span>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="app-main">
+
+    <!-- -------------------------------------------------------
+         TAB 1: Live Chat & Asymmetric Interceptor
+         ------------------------------------------------------- -->
+    <section class="tab-pane active" id="tab-chat">
+      <div class="chat-layout">
+        
+        <!-- Left: Real-Time Chat Stream -->
+        <div class="chat-panel">
+          
+          <!-- Chat Panel Header -->
+          <div class="chat-panel-header">
+            <div class="persona-selector">
+              <span class="persona-label">Sender Persona:</span>
+              <div class="persona-pill active" id="chip-user-a" onclick="setSender('User A')">User A (Alex)</div>
+              <div class="persona-pill" id="chip-user-b" onclick="setSender('User B')">User B (Jordan)</div>
+            </div>
+            <div class="chat-panel-actions">
+              <button class="btn-secondary" onclick="clearChat()" title="Reset chat history">
+                🗑️ Clear
+              </button>
+            </div>
+          </div>
+
+          <!-- Presets Quick Bar -->
+          <div class="presets-bar">
+            <span class="presets-label">⚡ Test Scenarios:</span>
+            <button class="preset-chip" onclick="loadPreset('workplace')">💼 Workplace Frustration</button>
+            <button class="preset-chip" onclick="loadPreset('gaming')">🎮 Gaming Toxicity</button>
+            <button class="preset-chip" onclick="loadPreset('threat')">⚠️ Threat / Abuse</button>
+            <button class="preset-chip" onclick="loadPreset('scam')">🛑 Service Complaint</button>
+            <button class="preset-chip" onclick="loadPreset('clean')">✅ Polite Sync</button>
+          </div>
+
+          <!-- Messages Feed -->
+          <div class="messages-container" id="chat-messages">
+            <!-- Messages rendered dynamically via JS -->
+            <div class="msg-row partner">
+              <div class="msg-meta">
+                <span class="msg-sender-name">System Assistant</span>
+                <span>•</span>
+                <span>WELCOME</span>
+              </div>
+              <div class="bubble-card clean-bubble">
+                <div class="bubble-header">
+                  <span class="action-pill pill-clean">SYSTEM READY</span>
+                  <span class="bubble-latency">&lt;25ms RAM</span>
+                </div>
+                <div class="bubble-content">
+                  👋 Welcome to <b>SafeChat NLP</b>! Type a toxic or aggressive message below (or click a test scenario above). Notice how <b>User A</b> sees what they typed, while <b>User B</b> receives the polite, POS-guided de-escalated rewrite!
+                </div>
+                <div class="bubble-footer">
+                  <span class="toxicity-badge toxic-green">Ready</span>
+                  <span class="click-hint">🔍 Tap any bubble to inspect NLP</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Typing Indicator -->
+          <div class="typing-bar" id="typing-bar">
+            <span id="typing-user">User</span> is typing
+            <span class="typing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </span>
+          </div>
+
+          <!-- Chat Input Composer -->
+          <div class="chat-composer">
+            <form class="composer-form" id="chat-form">
+              <input 
+                type="text" 
+                class="composer-input" 
+                id="msg-input" 
+                placeholder="Type a chat message... (e.g. 'Hey John, your update is complete garbage!')" 
+                autocomplete="off"
+                required
+              >
+              <button type="submit" class="btn-send">Send ➔</button>
+            </form>
+            <div class="composer-tips">
+              <span>💡 Messages are processed in RAM under 25ms using NLTK + spaCy + Logistic Regression.</span>
+              <span>Press <b>Enter</b> to send</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: Side Diagnostic Inspector Panel -->
+        <aside class="inspector-panel">
+          <div class="panel-title">
+            <span>🔬 Live NLP Message Inspector</span>
+          </div>
+
+          <!-- Toxicity Meter Card -->
+          <div class="card-section">
+            <div class="section-label">Topic 6 & 8: Toxicity Probability</div>
+            <div class="meter-wrapper">
+              <div class="meter-header">
+                <span id="inspect-score-val" style="color: var(--text-primary);">0%</span>
+                <span style="font-size:10px; color: var(--text-muted);">Threshold: 50%</span>
+              </div>
+              <div class="meter-track">
+                <div class="meter-fill" id="inspect-score-bar" style="width: 0%; background: var(--accent-emerald);"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Morphological Transformation Table -->
+          <div class="card-section">
+            <div class="section-label">Topic 2: POS De-escalation Mappings</div>
+            <div id="inspect-transformations">
+              <span style="font-size:11px; color:#64748b;">Awaiting message...</span>
+            </div>
+          </div>
+
+          <!-- spaCy Named Entities Card -->
+          <div class="card-section">
+            <div class="section-label">Topic 3: Named Entities (spaCy)</div>
+            <div class="chips-cloud" id="inspect-ner">
+              <span style="font-size:11px; color:#64748b;">None detected</span>
+            </div>
+          </div>
+
+          <!-- NLTK POS Tag Cloud -->
+          <div class="card-section">
+            <div class="section-label">Topic 1 & 2: Tokenization & POS (NLTK)</div>
+            <div class="chips-cloud" id="inspect-pos">
+              <span style="font-size:11px; color:#64748b;">None</span>
+            </div>
+          </div>
+
+          <!-- Preprocessing Stages -->
+          <div class="card-section">
+            <div class="section-label">Topic 4: Porter Stemmer Output</div>
+            <div id="inspect-preprocessed" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent-cyan);">None</div>
+          </div>
+
+          <!-- Latency Gauge -->
+          <div class="card-section" style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="section-label" style="margin-bottom:0;">Server Pipeline Latency:</span>
+            <span id="inspect-latency" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight:700; color: var(--accent-emerald);">0ms</span>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+    <!-- -------------------------------------------------------
+         TAB 2: Interactive Sandbox & Deep Inspector
+         ------------------------------------------------------- -->
+    <section class="tab-pane" id="tab-sandbox">
+      <div class="sandbox-grid">
+        
+        <!-- Left: Sandbox Input & Controls -->
+        <div class="sandbox-card">
+          <div class="panel-title">
+            <span>📝 Real-Time Text Analysis Sandbox</span>
+          </div>
+          <p style="font-size:13px; color: var(--text-secondary);">
+            Enter custom text to inspect the dual-trigger classifier, Part-of-Speech morphological tagging, and named entity detection side-by-side.
+          </p>
+
+          <textarea 
+            class="sandbox-textarea" 
+            id="sandbox-input" 
+            placeholder="Type or paste any sentence here to inspect full NLP pipeline..."
+          >Hey John, your update is complete garbage! I will hurt you today for this scam.</textarea>
+
+          <div class="sandbox-actions">
+            <div style="display:flex; gap:8px;">
+              <button class="btn-secondary" onclick="loadPreset('workplace')">Sample 1</button>
+              <button class="btn-secondary" onclick="loadPreset('gaming')">Sample 2</button>
+              <button class="btn-secondary" onclick="loadPreset('threat')">Sample 3</button>
+            </div>
+            <button class="btn-send" id="sandbox-run-btn" onclick="runSandboxAnalysis()">
+              Run NLP Analysis ➔
+            </button>
+          </div>
+
+          <!-- Preprocessing Steps (Topic 4) -->
+          <div class="card-section">
+            <div class="section-label">Topic 4: Normalized & Stemmed Text</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Regex Stripped:</div>
+            <div id="sandbox-clean-text" style="font-family:'JetBrains Mono', monospace; font-size:11.5px; color:#e2e8f0; margin-bottom:8px;">—</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Porter Stemmed Tokens:</div>
+            <div id="sandbox-stemmed-text" style="font-family:'JetBrains Mono', monospace; font-size:11.5px; color:var(--accent-cyan);">—</div>
+          </div>
+        </div>
+
+        <!-- Right: Multi-Tier Output & Visual Breakdown -->
+        <div class="sandbox-card">
+          <div class="panel-title">
+            <span>⚖️ Side-by-Side Tier Comparison</span>
+          </div>
+
+          <!-- Raw Input Preview -->
+          <div class="comparison-box" style="border-left: 3px solid var(--accent-rose);">
+            <div class="comparison-title" style="color: var(--accent-rose);">
+              <span>🚨 Original Input (Unfiltered)</span>
+            </div>
+            <div class="text-preview" id="preview-raw">Hey John, your update is complete garbage! I will hurt you today for this scam.</div>
+          </div>
+
+          <!-- Free Tier Preview -->
+          <div class="comparison-box" style="border-left: 3px solid var(--accent-amber);">
+            <div class="comparison-title" style="color: var(--accent-amber);">
+              <span>🛡️ Free Tier Output ([BEEP] Masking)</span>
+            </div>
+            <div class="text-preview" id="preview-free">Hey John, your update is complete [BEEP]! I will [BEEP] you today for this [BEEP].</div>
+          </div>
+
+          <!-- Premium Tier Preview -->
+          <div class="comparison-box" style="border-left: 3px solid var(--accent-emerald);">
+            <div class="comparison-title" style="color: var(--accent-emerald);">
+              <span>⚡ Premium Tier Output (Context-Aware POS De-escalation)</span>
+            </div>
+            <div class="text-preview" id="preview-premium">Hey John, your update is complete subpar quality! I will escalate a complaint against you today for this misleading service.</div>
+          </div>
+
+          <!-- Toxicity Gauge -->
+          <div class="card-section">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span class="section-label" style="margin-bottom:0;">Toxicity Score:</span>
+              <span id="sandbox-score" style="font-family:'JetBrains Mono', monospace; font-size:14px; font-weight:700; color:var(--accent-rose);">94.2%</span>
+              <span id="sandbox-latency" style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--text-muted);">9.4ms compute</span>
+            </div>
+            <div class="meter-track">
+              <div class="meter-fill" id="sandbox-score-bar" style="width: 94.2%; background: linear-gradient(90deg, #f59e0b, #f43f5e);"></div>
+            </div>
+          </div>
+
+          <!-- Tags Breakdown -->
+          <div class="card-section">
+            <div class="section-label">Topic 3: spaCy Entities</div>
+            <div class="chips-cloud" id="sandbox-ner-cloud">
+              <span class="chip-tag chip-ner">John [PERSON]</span>
+              <span class="chip-tag chip-ner">today [DATE]</span>
+            </div>
+          </div>
+
+          <div class="card-section">
+            <div class="section-label">Topic 2: Penn Treebank POS Breakdown</div>
+            <div class="chips-cloud" id="sandbox-pos-cloud">
+              <span style="font-size:11px; color:#64748b;">Click "Run NLP Analysis" to inspect tags.</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- -------------------------------------------------------
+         TAB 3: 9-Topic Syllabus Explorer
+         ------------------------------------------------------- -->
+    <section class="tab-pane" id="tab-syllabus">
+      <div class="syllabus-grid">
+
+        <!-- Topic 1 -->
+        <div class="topic-card">
+          <div class="topic-badge">Topic 1</div>
+          <h3 class="topic-title">Tokenization</h3>
+          <p class="topic-desc">Segments raw character streams into discrete linguistic sentences and words using NLTK's Punkt tokenizers.</p>
+          <div class="topic-code">sent_tokenize() &amp; word_tokenize()</div>
+        </div>
+
+        <!-- Topic 2 -->
+        <div class="topic-card">
+          <div class="topic-badge">Topic 2</div>
+          <h3 class="topic-title">Part-of-Speech Tagging</h3>
+          <p class="topic-desc">Penn Treebank tagger identifying grammatical roles (NN, JJ, VB) to enable context-sensitive word replacements.</p>
+          <div class="topic-code">nltk.pos_tag(tokens)</div>
+        </div>
+
+        <!-- Topic 3 -->
+        <div class="topic-card">
+          <div class="topic-badge">Topic 3</div>
+          <h3 class="topic-title">Named Entity Recognition</h3>
+          <p class="topic-desc">spaCy convolutional transition-based parser detecting PERSON, ORG, GPE, and DATE targets in real time.</p>
+          <div class="topic-code">spacy.load('en_core_web_sm')</div>
+        </div>
+
+        <!-- Topic 4 -->
+        <div class="topic-card">
+          <div class="topic-badge">Topic 4</div>
+          <h3 class="topic-title">Text Preprocessing</h3>
+          <p class="topic-desc">Lowercasing, regex non-alpha stripping, English stopwords set filtering, and Porter morphological stemming.</p>
+          <div class="topic-code">PorterStemmer().stem(word)</div>
+        </div>
+
+        <!-- Topic 5 -->
+        <div class="topic-card">
+          <div class="topic-badge">Topic 5</div>
+          <h3 class="topic-title">Vector Space Models</h3>
+          <p class="topic-desc">TF-IDF unigram/bigram representation capturing term frequency across the corpus alongside Gensim Word2Vec.</p>
+          <div class="topic-code">TfidfVectorizer(ngram_range=(1,2))</div>
+        </div>
+
+        <!-- Topic 6 -->
+        <div class="topic-card">
+          <div class="topic-badge">Topic 6 &amp; 8</div>
+          <h3 class="topic-title">Logistic Regression</h3>
+          <p class="topic-desc">High-speed binary classification with calibrated probability scores predicting toxicity likelihood in under 3ms.</p>
+          <div class="topic-code">model.predict_proba(vector)[0][1]</div>
+        </div>
+
+        <!-- Topic 7: Interactive CYK Parser -->
+        <div class="topic-card cyk-card">
+          <div class="topic-badge">Topic 7: Syntax Parsing</div>
+          <h3 class="topic-title">Context-Free Grammar &amp; CYK Chart Parser</h3>
+          <p class="topic-desc">Generates structural parse trees verifying grammatical syntax according to formal grammar rules (S -> NP VP).</p>
+          
+          <div class="cyk-input-group">
+            <input type="text" class="cyk-input" id="cyk-input" value="service is garbage" placeholder="Try: service is garbage | product is clean">
+            <button class="btn-send" onclick="parseSyntaxTree()" style="height:38px; padding:0 18px;">Parse Tree ➔</button>
+          </div>
+
+          <div class="tree-output" id="tree-output">(S (NP service) (VP (V is) (Adj garbage)))</div>
+        </div>
+
+        <!-- Topic 8 -->
+        <div class="topic-card">
+          <div class="topic-badge">Topic 8</div>
+          <h3 class="topic-title">Dual-Trigger Hybrid Engine</h3>
+          <p class="topic-desc">Fuses statistical ML probability classification with deterministic POS-aware dictionary lookups for 0% false negatives.</p>
+          <div class="topic-code">is_toxic = (prob &gt;= 0.5) or lexicon_hit</div>
+        </div>
+
+        <!-- Topic 9 -->
+        <div class="topic-card">
+          <div class="topic-badge">Topic 9</div>
+          <h3 class="topic-title">Sub-25ms RAM Pipeline</h3>
+          <p class="topic-desc">All models, tokenizers, taggers, and vocabularies pre-loaded into module RAM at startup to eliminate disk I/O.</p>
+          <div class="topic-code">Global RAM Pre-loading (0ms cold start)</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- -------------------------------------------------------
+         TAB 4: Deploy & API Documentation
+         ------------------------------------------------------- -->
+    <section class="tab-pane" id="tab-deploy">
+      <div class="deploy-grid">
+
+        <!-- 1-Click Cloud Deployment -->
+        <div class="deploy-card">
+          <div class="panel-title">
+            <span>🌐 1-Click Production Cloud Deployment</span>
+          </div>
+          <p style="font-size:13px; color: var(--text-secondary);">
+            SafeChat NLP is fully packaged for cloud hosting on <b>Render</b>, <b>Railway</b>, <b>Fly.io</b>, or any <b>Docker</b> platform.
+          </p>
+
+          <div class="deploy-step">
+            <div class="step-num">1</div>
+            <div class="step-text">
+              <b>Deploy to Render (Free Tier):</b><br>
+              Create a new Web Service connected to this repository. Set the build and start commands:
+            </div>
+          </div>
+          <div class="code-block">
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <code>Build: pip install -r requirements.txt &amp;&amp; python -m spacy download en_core_web_sm &amp;&amp; python train_and_syllabus.py
+Start: gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app</code>
+          </div>
+
+          <div class="deploy-step">
+            <div class="step-num">2</div>
+            <div class="step-text">
+              <b>Deploy via Docker:</b><br>
+              Build and run the self-contained container with all NLTK and spaCy models pre-baked:
+            </div>
+          </div>
+          <div class="code-block">
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <code>docker build -t safechat-nlp .
+docker run -p 5000:5000 safechat-nlp</code>
+          </div>
+
+          <div class="deploy-step">
+            <div class="step-num">3</div>
+            <div class="step-text">
+              <b>Render Blueprint (`render.yaml`):</b><br>
+              The repository includes an infrastructure-as-code <code>render.yaml</code> for automated 1-click provisioning.
+            </div>
+          </div>
+        </div>
+
+        <!-- REST & WebSocket API Console -->
+        <div class="deploy-card">
+          <div class="panel-title">
+            <span>⚡ Interactive REST &amp; WebSocket API Hub</span>
+          </div>
+
+          <div class="card-section">
+            <div class="section-label">GET /ping (Render Cold-Start Wakeup)</div>
+            <div class="code-block">
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              <code>curl -X GET http://localhost:5000/ping</code>
+            </div>
+          </div>
+
+          <div class="card-section">
+            <div class="section-label">POST /api/analyze or /api/test (JSON Pipeline)</div>
+            <div class="code-block">
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              <code>curl -X POST http://localhost:5000/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hey John, your update is complete garbage!", "tier": "premium", "sender": "User A"}'</code>
+            </div>
+          </div>
+
+          <div class="card-section">
+            <div class="section-label">WebSocket Events (Flask-SocketIO)</div>
+            <div style="font-size:12px; color:var(--text-secondary); line-height:1.6;">
+              • <code>connect</code>: Client establishes persistent WebSocket session.<br>
+              • <code>send_message</code>: Client emits <code>{"sender": "User A", "message": "...", "tier": "premium"}</code>.<br>
+              • <code>receive_message</code>: Server broadcasts sanitized payload to all connected clients.<br>
+              • <code>typing</code>: Real-time user typing event broadcast.
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Application Footer -->
+  <footer class="app-footer">
+    <div>
+      <b>SafeChat NLP</b> — Production Web Platform &amp; Live Syllabus Demonstration
+    </div>
+    <div class="footer-links">
+      <a href="javascript:void(0)" class="footer-link" onclick="switchTab('chat')">Live Chat</a>
+      <a href="javascript:void(0)" class="footer-link" onclick="switchTab('sandbox')">NLP Sandbox</a>
+      <a href="javascript:void(0)" class="footer-link" onclick="switchTab('syllabus')">Syllabus</a>
+      <a href="javascript:void(0)" class="footer-link" onclick="switchTab('deploy')">Deploy</a>
+    </div>
+  </footer>
+
+  <!-- Application Script -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
