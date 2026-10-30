@@ -3,6 +3,13 @@ app.py - SafeChat NLP: Sub-150ms Production Web Server & Real-Time Engine
 Complies with Latency Rules #1, #2, #3 and Ponytail Simplicity Standard.
 """
 
+# GEVENT MONKEY-PATCHING: Must execute at line 1 before any other modules load
+try:
+    from gevent import monkey
+    monkey.patch_all()
+except ImportError:
+    pass
+
 import os
 import re
 import time
@@ -23,10 +30,8 @@ from train_and_syllabus import ensure_nlp_assets, train_and_export_if_missing
 # ---------------------------------------------------------
 # LATENCY RULE #1: GLOBAL RAM PRE-LOADING AT STARTUP
 # ---------------------------------------------------------
-# Ensure NLTK and spaCy models are present
 ensure_nlp_assets()
 
-# Auto-bootstrap model if .pkl is missing
 if not os.path.exists("tfidf_vectorizer.pkl") or not os.path.exists("toxic_classifier.pkl"):
     print("[SafeChat RAM Loader] Artifacts missing. Training on startup...")
     train_and_export_if_missing()
@@ -109,10 +114,10 @@ app = Flask(__name__, static_folder="static", template_folder="templates")
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "safechat-nlp-secret-key-prod")
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# shortcut: auto-fallback to threading if eventlet isn't available on local Windows dev
+# Gevent-first async mode fallback
 try:
-    import eventlet
-    socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
+    import gevent
+    socketio = SocketIO(app, cors_allowed_origins="*", async_mode="gevent")
 except Exception:
     socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
@@ -280,7 +285,7 @@ def api_parse_tree():
             "trees": trees_str,
             "parsed": len(trees) > 0
         }), 200
-    except Exception as e:
+    except Exception:
         return jsonify({
             "sentence": sentence,
             "tokens": tokens,
